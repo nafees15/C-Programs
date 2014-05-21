@@ -1,0 +1,185 @@
+#-----------------------------------------------------------#
+#--------------- Author -- Nafees Noor ---------------------#
+#--------------- Programming Assignment 5b -----------------#
+#-----------------------------------------------------------#
+
+#---------------- All the used register --------------------#
+#-----------$15 is for saving the input string to it -------#
+#-----------$16 is for counting the each character ---------#
+#-----------------------------------------------------------#
+
+		.data
+buffer1:	.space		81
+buffer2:	.space		11	
+prompt1:	.asciiz 	"Enter the string\n"
+prompt2:	.asciiz		"Enter the pattern string\n"		
+prompt3:	.asciiz		"Yes, there is a match. \n"
+prompt4:	.asciiz		"Length of the longest partial match = "
+prompt5:	.asciiz		"No, there is no match\n"
+prompt6:	.asciiz		"Starting index = "
+line:		.asciiz		"\n"
+		
+		.text
+#---------------- Main Function ------------------#
+		.globl	main
+
+
+main:			
+		li	$v0,	4
+		la	$a0,	prompt1
+		
+		syscall
+
+		#Read the string
+		li      $v0,    8
+		la	$a0,	buffer1
+		syscall
+	
+
+		#Prompt for the pattern string
+		li	$v0,	4
+		la	$a0,	prompt2
+		syscall
+
+		#Read the Pattern string
+		li	$v0,	8
+		la	$a0,	buffer2
+		syscall	
+
+	#-------------------------------------------------------------------------#
+	# $15 is for the address of the first input String                        #
+	# $16 is for the character of the first input String                      #
+	# $17 is for the address of the Pattern String                            #
+	# $18 is for the character of the Pattern String                          #  	
+	# $7 is current counter register if any match found                       #
+	# $8 is highest counter register to see overall number of match found     #	
+	# $9 is overall counter register to check if any match was found or not   # 
+	#-------------------------------------------------------------------------#
+
+
+		#$15 to load the string to the register
+		la	$15,	buffer1 			# $15 is the address for the first input string 
+		lbu	$16,	0($15)  			#$16 is saving the each character of the first string		
+		la	$17,	buffer2				#$17 is for the pattern string
+		lbu	$18,	0($17)				#$18 is for each character of pattern string
+	
+		move	$7,	$0
+		move	$8,	$0
+		move	$9,	$0
+		move	$11,	$0
+		
+		beq	$16, 	$18,	pattern_Match		#Chcking if the first character are equal in input1 and pattern String
+		j	Loop2
+
+Loop2:		move	$14,	$7
+		move	$8,	$7
+		move	$7,	$0
+
+		addi	$15,	$15,	1			#Incrementing 1 so it will point the next character of the First String
+		lbu	$16,	0($15)				# Saving that character into $16
+		beq	$16,	$18,	pattern_Match		#Checking if the character is same to the pattern character
+															
+		beq	$16,	10,	P_Match			#Checking if the first string reached new line character or not
+		j Loop2
+
+			
+pattern_Match:	
+		addi	$11,	$11,	1			#Index
+		addi	$7,	$7,	1			#Adding current 
+		add 	$8,	$8,	$7
+	
+		move	$10,	$17				#moving it to the index				
+		addi	$15,	$15,	1			# Incrementing first string pointer
+		lbu     $16,	0($15)		
+		addi	$17,	$17,	1 			# Incrementing pattern string pointer
+		lbu	$18,	0($17)
+
+		beq	$16,	$18,	Loop2			#Checking if the both character are same or not
+
+		beq     $18,    10,   	full_Match		#If the pattern string reached to new line then its done
+		j	pattern_Match
+
+	
+
+end_Loop:	beq	$7,	$0,	NM   			#If the $7 (current) equal 0 that means no match found
+		bgt	$7,	$14,	swap			#If the max is less than current then swap
+	#	beq	$18,	10,	full_Match					
+	#	beq	$16,	10,	P_Match
+
+
+
+swap:		move	$14,	$7
+	   	syscall
+		
+		j	end_Loop
+
+			
+		#Print highest match
+P_Match:	li	$v0,	4
+		la	$a0,	prompt5
+		syscall
+
+		li	$v0,	4				
+		la	$a0,	prompt4
+		syscall
+
+		move	$a0,	$14				#Printing out the longest match found
+		li	$v0,	1
+		syscall
+
+		
+		li	$v0,	4
+		la	$a0,	line
+		syscall
+
+
+		#and the index
+
+		li	$v0,	4
+		la	$a0,	prompt6
+		syscall
+
+		move	$a0,	$10				#Printing out the index number
+		li	$v0,	1
+		syscall
+
+		li 	$v0,	4
+		la	$a0,	line				#Printing out a line after the output
+		syscall		
+		
+		j	exit					#Exit the program
+
+
+NM:								#Printing out no match found at all
+		li	$v0,	4
+		la	$a0,	prompt5
+		syscall
+		j	exit
+	
+
+
+full_Match:    
+		la 	$a0,	prompt3  			#Printing out for a full match found
+		li	$v0,	4
+                syscall
+		
+		li	$v0,	4
+		la	$a0,	prompt6
+		syscall
+
+		move	$a0,	$10
+		li	$v0,	1
+		syscall
+
+		la	$a0,	line
+		li	$v0,	4
+		syscall
+
+
+		j	exit
+
+
+#--------------- Stop the program ----------#
+
+exit:		li	$v0,	10
+		syscall

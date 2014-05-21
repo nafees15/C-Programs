@@ -1,0 +1,100 @@
+ 	
+#Author -- Nafees Noor
+#Programming Assignment 5-A
+
+#-------------------- All the registers ----------------------#
+# $17 is being used for saving bitmask
+# $16 is being used for counting the leading coefficient
+# $10 is being used for the input value 
+#-------------------------------------------------------------#
+
+			.data
+
+prompt1:		.asciiz	 		"Enter one number\n"	
+prompt2:		.asciiz	 		"Number of leading 1's are : "
+prompt3:		.asciiz	 		"Number of leading 0's are :  "
+prompt4:		.asciiz	 		"Number of leading zeros are = 32 .\n"
+mask:			.word			0x80000000		#Mask
+count:			.word			0			#Counter variable
+line:			.asciiz			"\n"			#To print a line after the output
+
+						
+			.text	
+				
+		#### MAIN FUNCTION #### 					
+			.globl main
+		
+
+main:	 	### Prompt for an integer ###
+		la	$a0,	prompt1  
+		li	$v0,	4
+			syscall
+		### Read in integer ###
+		li	$v0,	5
+			syscall
+	
+
+		#Loading the bit mask into the register
+		lw      $15,	mask 	
+		lw	$16,	count		#Initilazing $16 to counter register		
+		move    $10     $v0             #saving input into the $10
+	
+
+		# If the inputed number positive going to the loop 		
+		bltz	$10	Loop2
+		bgtz	$10	Loop1
+		beqz	$10	no_Loop		
+
+
+Loop1:		and	$11,	$10,	$15	#logical and to see if the mask and
+		beq	$11,	$15,	P0	#is  equal or not
+		addi	$16	$16,	1	#Incrementing the counter by 1	
+		sll	$10,	$10,	1	#shifting the input by 1
+		j	Loop1			
+	
+Loop2:		and	$11,	$10,	$15
+		bne	$11,	$15,	P1	
+		addi	$16	$16	1	#Incrementing the counter by 1
+		sll	$10	$10	1
+		j	Loop2
+
+P0:		la	$a0,	prompt3	   #It prints out all the 0s present in the binary representation
+		li	$v0,	4
+		syscall
+
+		move	$a0,	$16	# Print out the total number of 0s
+		li	$v0,	1
+		syscall
+
+		la      $a0, line      #Printing out one line after the output
+                li      $v0, 4
+                syscall
+
+
+		li	$v0,	10
+		syscall
+
+P1:		la	$a0,	prompt2   #This printout all the 1s present in the binary representation
+		li	$v0,	4
+		syscall
+
+		move	$a0,	$16       # Moving the total number of 1s
+		li	$v0,	1
+		syscall
+
+		la      $a0, line         #Printout a line after the output
+                li      $v0, 4
+                syscall
+
+
+		li	$v0,	10
+		syscall
+
+
+no_Loop:	la	$a0,	prompt4      # THis prints out if the input is a 0 
+		li	$v0,	4            # In this case it just prints out 32 
+ 		syscall
+		
+		li	$v0,	10
+		syscall
+
